@@ -95,8 +95,9 @@ typedef struct
 	conf_t conf[1];
 	char filename[MAX_STRING];
 	double start_time;
+	double last_time, next_time;
 	int next_state, finish_time;
-	long long bytes_done, start_byte, size;
+	long long bytes_done, start_byte, last_bytes, size;
 	int bytes_per_second;
 	int delay_time;
 	int outfd;

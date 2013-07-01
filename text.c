@@ -341,6 +341,7 @@ int main( int argc, char *argv[] )
 	signal( SIGINT, stop );
 	signal( SIGTERM, stop );
 	
+	double next_print = gettime() + 1.0f;
 	while( !axel->ready && run )
 	{
 		long long int prev, done;
@@ -350,8 +351,10 @@ int main( int argc, char *argv[] )
 		
 		if( conf->alternate_output )
 		{			
-			if( !axel->message && prev != axel->bytes_done )
+			if( axel->message || gettime() > next_print) {
+				next_print = gettime() + 1.0f;
 				print_alternate_output( axel );
+			}
 		}
 		else
 		{
@@ -513,10 +516,12 @@ static void print_alternate_output(axel_t *axel)
 		printf( "] [%6.1fMB/s]", (double) axel->bytes_per_second / (1024*1024) );
 	else if(axel->bytes_per_second > 1024)
 		printf( "] [%6.1fKB/s]", (double) axel->bytes_per_second / 1024 );
-	else
+	else if(axel->bytes_per_second > 256)
 		printf( "] [%6.1fB/s]", (double) axel->bytes_per_second );
+	else
+		printf( "] [--.-B/s]" );
 	
-	if(done<total)
+	if(done<total && axel->bytes_per_second > 256)
 	{
 		int seconds,minutes,hours,days;
 		seconds=axel->finish_time - now;

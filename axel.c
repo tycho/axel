@@ -424,8 +424,16 @@ conn_check:
 	}
 
 	/* Calculate current average speed and finish_time		*/
-	axel->bytes_per_second = (int) ( (double) ( axel->bytes_done - axel->start_byte ) / ( gettime() - axel->start_time ) );
-	axel->finish_time = (int) ( axel->start_time + (double) ( axel->size - axel->start_byte ) / axel->bytes_per_second );
+	if (axel->next_time < gettime()) {
+		double now = gettime();
+
+		axel->bytes_per_second = (int) ( (double) ( axel->bytes_done - axel->last_bytes ) / ( now - axel->last_time ) );
+		axel->finish_time = (int) ( axel->start_time + (double) ( axel->size - axel->start_byte ) / axel->bytes_per_second );
+
+		axel->last_bytes = axel->bytes_done;
+		axel->last_time = now;
+		axel->next_time = now + 2.0f;
+	}
 
 	/* Check speed. If too high, delay for some time to slow things
 	   down a bit. I think a 5% deviation should be acceptable.	*/
