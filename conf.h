@@ -36,7 +36,6 @@ typedef struct
 	int buffer_size;
 	int max_speed;
 	int verbose;
-	int alternate_output;
 	
 	if_t *interfaces;
 	

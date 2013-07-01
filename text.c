@@ -28,8 +28,7 @@
 static void stop( int signal );
 static char *size_human( long long int value );
 static char *time_human( int value );
-static void print_commas( long long int bytes_done );
-static void print_alternate_output( axel_t *axel );
+static void print_output( axel_t *axel );
 static void print_help();
 static void print_version();
 static void print_messages( axel_t *axel );
@@ -129,7 +128,6 @@ int main( int argc, char *argv[] )
 			}
 			break;
 		case 'a':
-			conf->alternate_output = 1;
 			break;
 		case 'N':
 			*conf->http_proxy = 0;
@@ -323,18 +321,8 @@ int main( int argc, char *argv[] )
 	axel_start( axel );
 	print_messages( axel );
 
-	if( conf->alternate_output )
-	{
-		putchar('\n');
-	} 
-	else
-	{
-		if( axel->bytes_done > 0 )	/* Print first dots if resuming	*/
-		{
-			putchar( '\n' );
-			print_commas( axel->bytes_done );
-		}
-	}
+	putchar('\n');
+
 	axel->start_byte = axel->bytes_done;
 	
 	/* Install save_state signal handler for resuming support	*/
@@ -344,68 +332,24 @@ int main( int argc, char *argv[] )
 	double next_print = gettime() + 1.0f;
 	while( !axel->ready && run )
 	{
-		long long int prev, done;
-		
-		prev = axel->bytes_done;
 		axel_do( axel );
 		
-		if( conf->alternate_output )
-		{			
-			if( axel->message || gettime() > next_print) {
-				next_print = gettime() + 1.0f;
-				print_alternate_output( axel );
-			}
-		}
-		else
-		{
-			/* The infamous wget-like 'interface'.. ;)		*/
-			done = ( axel->bytes_done / 1024 ) - ( prev / 1024 );
-			if( done && conf->verbose > -1 )
-			{
-				for( i = 0; i < done; i ++ )
-				{
-					i += ( prev / 1024 );
-					if( ( i % 50 ) == 0 )
-					{
-						if( prev >= 1024 )
-							printf( "  [%6.1fKB/s]", (double) axel->bytes_per_second / 1024 );
-						if( axel->size < 10240000 )
-							printf( "\n[%3lld%%]  ", min( 100, 102400 * i / axel->size ) );
-						else
-							printf( "\n[%3lld%%]  ", min( 100, i / ( axel->size / 102400 ) ) );
-					}
-					else if( ( i % 10 ) == 0 )
-					{
-						putchar( ' ' );
-					}
-					putchar( '.' );
-					i -= ( prev / 1024 );
-				}
-				fflush( stdout );
-			}
+		if( axel->message || gettime() > next_print) {
+			next_print = gettime() + 1.0f;
+			print_output( axel );
 		}
 		
 		if( axel->message )
 		{
-			if(conf->alternate_output==1)
-			{
-				/* clreol-simulation */
-				putchar( '\r' );
-				for( i = 0; i < 79; i++ ) /* linewidth known? */
-					putchar( ' ' );
-				putchar( '\r' );
-			}
-			else
-			{
-				putchar( '\n' );
-			}
+			/* clreol-simulation */
+			putchar( '\r' );
+			for( i = 0; i < 79; i++ ) /* linewidth known? */
+				putchar( ' ' );
+			putchar( '\r' );
 			print_messages( axel );
 			if( !axel->ready )
 			{
-				if(conf->alternate_output!=1)
-					print_commas( axel->bytes_done );
-				else
-					print_alternate_output(axel);
+				print_output(axel);
 			}
 		}
 		else if( axel->ready )
@@ -465,25 +409,7 @@ char *time_human( int value )
 	return( string );
 }
 
-/* Part of the infamous wget-like interface. Just put it in a function
-	because I need it quite often..					*/
-void print_commas( long long int bytes_done )
-{
-	int i, j;
-	
-	printf( "       " );
-	j = ( bytes_done / 1024 ) % 50;
-	if( j == 0 ) j = 50;
-	for( i = 0; i < j; i ++ )
-	{
-		if( ( i % 10 ) == 0 )
-			putchar( ' ' );
-		putchar( ',' );
-	}
-	fflush( stdout );
-}
-
-static void print_alternate_output(axel_t *axel) 
+static void print_output(axel_t *axel)
 {
 	long long int done=axel->bytes_done;
 	long long int total=axel->size;
@@ -553,7 +479,6 @@ void print_help()
 		"-N\tJust don't use any proxy server\n"
 		"-q\tLeave stdout alone\n"
 		"-v\tMore status information\n"
-		"-a\tAlternate progress indicator\n"
 		"-h\tThis information\n"
 		"-V\tVersion information\n"
 		"\n"
@@ -570,7 +495,6 @@ void print_help()
 		"--no-proxy\t\t-N\tJust don't use any proxy server\n"
 		"--quiet\t\t\t-q\tLeave stdout alone\n"
 		"--verbose\t\t-v\tMore status information\n"
-		"--alternate\t\t-a\tAlternate progress indicator\n"
 		"--help\t\t\t-h\tThis information\n"
 		"--version\t\t-V\tVersion information\n"
 		"\n"
