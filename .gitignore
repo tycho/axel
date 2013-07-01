@@ -1,0 +1,5 @@
+*.mo
+*.o
+/Makefile.settings
+/axel
+/config.h
