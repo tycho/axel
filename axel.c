@@ -489,10 +489,9 @@ void axel_close( axel_t *axel )
 /* time() with more precision						*/
 double gettime()
 {
-	struct timeval time[1];
-	
-	gettimeofday( time, 0 );
-	return( (double) time->tv_sec + (double) time->tv_usec / 1000000 );
+	struct timespec ts;
+	clock_gettime(CLOCK_MONOTONIC, &ts);
+	return (double)ts.tv_sec + ((double)ts.tv_nsec / 1.0e9);
 }
 
 /* Save the state of the current download				*/
