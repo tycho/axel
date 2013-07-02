@@ -423,18 +423,6 @@ conn_check:
 		}
 	}
 
-	/* Calculate current average speed and finish_time		*/
-	if (axel->next_time < gettime()) {
-		double now = gettime();
-
-		axel->bytes_per_second = (int) ( (double) ( axel->bytes_done - axel->last_bytes ) / ( now - axel->last_time ) );
-		axel->finish_time = (int) ( axel->start_time + (double) ( axel->size - axel->start_byte ) / axel->bytes_per_second );
-
-		axel->last_bytes = axel->bytes_done;
-		axel->last_time = now;
-		axel->next_time = now + 2.0f;
-	}
-
 	/* Check speed. If too high, delay for some time to slow things
 	   down a bit. I think a 5% deviation should be acceptable.	*/
 	if( axel->conf->max_speed > 0 )
@@ -451,6 +439,18 @@ conn_check:
 	/* Ready?							*/
 	if( axel->bytes_done == axel->size )
 		axel->ready = 1;
+
+	/* Calculate current average speed and finish_time		*/
+	if (axel->ready || axel->next_time < gettime()) {
+		double now = gettime();
+
+		axel->bytes_per_second = (int) ( (double) ( axel->bytes_done - axel->last_bytes ) / ( now - axel->last_time ) );
+		axel->finish_time = (int) ( axel->start_time + (double) ( axel->size - axel->start_byte ) / axel->bytes_per_second );
+
+		axel->last_bytes = axel->bytes_done;
+		axel->last_time = now;
+		axel->next_time = now + 2.0f;
+	}
 }
 
 /* Close an axel connection						*/
