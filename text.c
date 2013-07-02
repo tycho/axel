@@ -329,13 +329,13 @@ int main( int argc, char *argv[] )
 	signal( SIGINT, stop );
 	signal( SIGTERM, stop );
 	
-	double next_print = gettime() + 1.0f;
+	double next_print = 0;
 	while( !axel->ready && run )
 	{
 		axel_do( axel );
 		
-		if( axel->message || gettime() > next_print) {
-			next_print = gettime() + 1.0f;
+		if( axel->ready || axel->message || gettime() > next_print) {
+			next_print = gettime() + 0.5f;
 			print_output( axel );
 		}
 		
